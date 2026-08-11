@@ -208,8 +208,229 @@ def load_saved_objects():
         with open('tfidf.pkl', 'rb') as f_tfidf:
             loaded_tfidf = pickle.load(f_tfidf)
         model_loaded = True
+bagian mana sih
+app.py
+Python
+keseluruhannya iniii
+requirement nya udah aku ubah yuwu di github nya tp kenapa masih gini ya?
+
+Pasted markdown.md
+File
+udah nunggu lam masih eror pulak
+
+YA AMPUN 😭😭 tapi sekarang situasinya beda dari yang tadi.
+
+Kalau tadi requirements.txt salah nama → sklearn memang belum ter-install.
+Sekarang kamu sudah benerin requirements dan tadi log menunjukkan:
+
+Resolved 45 packages
+
+berarti requirements sudah terbaca.
+
+Tapi screenshot terbaru masih bilang:
+
+ModuleNotFoundError
+
+dan berhenti di:
+
+loaded_model = pickle.load(f_model)
+Nah, sekarang kita WAJIB lihat nama modul yang hilang
+
+Tulisan merah di aplikasi memang cuma menampilkan:
+
+ModuleNotFoundError
+
+karena Streamlit menyembunyikan detail error.
+
+Klik Manage app → buka Logs → scroll PALING BAWAH.
+
+Cari baris yang bentuknya persis seperti:
+
+ModuleNotFoundError: No module named 'xxxxx'
+
+Yang aku butuhkan cuma bagian:
+
+No module named 'xxxxx'
+Jangan ubah apa-apa dulu ya 😭
+
+Karena sekarang kita nggak boleh nebak lagi apakah yang hilang:
+
+sklearn
+numpy
+scipy
+modul lain yang tersimpan di model.pkl
+atau dependency lain.
+
+Apalagi errornya terjadi di pickle.load(), jadi sangat mungkin pickle kamu sedang mencoba memanggil modul yang dibutuhkan saat model dibuat.
+
+Kirim screenshot Cloud Logs paling bawah, terutama baris ModuleNotFoundError: No module named '...'. Dari situ baru aku kasih satu perbaikan yang tepat, nggak muter-muter lagi.
+
+Using uv pip install.
+
+Using Python 3.14.7 environment at /home/adminuser/venv
+
+Resolved 45 packages in 536ms
+
+[20:13:59] 🐍 Python dependencies were installed from /mount/src/sistem_deteksi_hoaks/requirements.txt using uv.
+
+[20:14:01] 📦 Processed dependencies!
+
+[20:14:05] 🐙 Pulling code changes from Github...
+
+[20:14:05] 📦 Processing dependencies...
+
+[20:14:05] 📦 Processed dependencies!
+
+[20:14:08] 🔄 Updated app!
+
+[20:14:08] 🐙 Pulling code changes from Github...
+
+[20:14:08] 📦 Processing dependencies...
+
+[20:14:08] 📦 Processed dependencies!
+
+[20:14:11] 🔄 Updated app!
+
+[20:14:11] 🐙 Pulling code changes from Github...
+
+[20:14:12] 📦 Processing dependencies...
+
+[20:14:12] 📦 Processed dependencies!
+
+[20:14:15] 🔄 Updated app!
+
+[20:14:15] 🐙 Pulling code changes from Github...
+
+[20:14:15] 📦 Processing dependencies...
+
+[20:14:15] 📦 Processed dependencies!
+
+[20:14:18] 🔄 Updated app!
+
+[20:14:18] 🐙 Pulling code changes from Github...
+
+[20:14:18] 📦 Processing dependencies...
+
+[20:14:18] 📦 Processed dependencies!
+
+[20:14:20] 🔄 Updated app!
+
+gaada paling bawahnya gitu
+
+NAHHH, ini justru informasi penting banget 😭
+
+Baris ini:
+
+🐍 Python dependencies were installed from /mount/src/sistem_deteksi_hoaks/requirements.txt using uv.
+
+berarti SEKARANG requirements.txt SUDAH TERBACA. Jadi masalah yang tadi karena nama file salah SUDAH BERES. ✅
+
+Dan proses:
+
+Pulling code changes...
+Processing dependencies...
+Updated app!
+
+berulang-ulang itu bukan berarti kamu harus nunggu install lagi. Itu aplikasi sedang restart/update berulang.
+
+Sekarang jangan utak-atik requirements lagi.
+
+Kita perlu tahu error ModuleNotFoundError yang sekarang sebenarnya apa.
+
+Karena layar aplikasi cuma menunjukkan:
+
+ModuleNotFoundError
+
+tapi nama modulnya disembunyikan.
+
+Cara paling gampang: kita bikin error-nya kelihatan
+
+Di app.py, fungsi kamu sekarang kemungkinan seperti ini:
+
+@st.cache_resource
+def load_saved_objects():
+    ...
+    try:
+        with open('model.pkl', 'rb') as f_model:
+            loaded_model = pickle.load(f_model)
+
+        with open('tfidf.pkl', 'rb') as f_tfidf:
+            loaded_tfidf = pickle.load(f_tfidf)
+
+        return loaded_model, loaded_tfidf, True
+
+    except FileNotFoundError:
+        return None, None, False
+
+Ubah bagian except FileNotFoundError: menjadi:
+
+    except Exception as e:
+        st.error(f"Error saat memuat model: {type(e).__name__}: {e}")
+        return None, None, False
+
+Jadi kalau ternyata yang hilang misalnya scipy, sklearn, atau modul lain, aplikasi akan menampilkan nama sebenarnya.
+
+Setelah itu
+Save app.py
+Commit ke GitHub
+Streamlit akan update otomatis
+Buka aplikasinya
+Lihat pesan error yang muncul
+
+Misalnya nanti keluar:
+
+Error saat memuat model: ModuleNotFoundError: No module named 'scipy'
+
+NAH itu baru jelas kita tinggal tambahkan scipy ke requirements.
+
+Dan satu hal: jangan pindah ke Python 3.12 dulu. Sekarang requirements.txt sudah berhasil dibaca, jadi kita cari dulu modul apa yang sebenarnya hilang. Jangan sampai kita bongkar deployment lagi padahal masalahnya cuma satu dependency. 😭
+
+@st.cache_resource
+def load_saved_objects():
+    """
+    Memuat model klasifikasi Naive Bayes dan Vectorizer TF-IDF secara aman.
+    """
+    model_loaded = False
+    loaded_model, loaded_tfidf = None, None
+    try:
+        with open('model.pkl', 'rb') as f_model:
+            loaded_model = pickle.load(f_model)
+        with open('tfidf.pkl', 'rb') as f_tfidf:
+            loaded_tfidf = pickle.load(f_tfidf)
+        model_loaded = True
     except FileNotFoundError:
         pass
+    return loaded_model, loaded_tfidf, model_loaded
+
+model, tfidf, is_model_ready = load_saved_objects()
+kodingan aku gini yuwu
+
+IYAA, kalau kodenya persis seperti itu, kita bisa ubah sedikit buat ngeliatin error asli dari pickle.load(). Sekarang kode kamu cuma menangkap FileNotFoundError, jadi ModuleNotFoundError tetap dilempar keluar dan Streamlit menyembunyikan detailnya.
+
+Ganti fungsi kamu jadi ini:
+@st.cache_resource
+def load_saved_objects():
+    """
+    Memuat model klasifikasi Naive Bayes dan Vectorizer TF-IDF secara aman.
+    """
+    model_loaded = False
+    loaded_model, loaded_tfidf = None, None
+
+    try:
+        with open('model.pkl', 'rb') as f_model:
+            loaded_model = pickle.load(f_model)
+
+        with open('tfidf.pkl', 'rb') as f_tfidf:
+            loaded_tfidf = pickle.load(f_tfidf)
+
+        model_loaded = True
+
+    except FileNotFoundError:
+        st.error("File model.pkl atau tfidf.pkl tidak ditemukan.")
+
+    except Exception as e:
+        st.error(f"Error saat memuat model: {type(e).__name__}: {e}")
+        
     return loaded_model, loaded_tfidf, model_loaded
 
 model, tfidf, is_model_ready = load_saved_objects()
