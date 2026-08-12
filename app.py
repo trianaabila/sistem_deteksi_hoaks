@@ -339,20 +339,11 @@ with col_info:
         st.markdown("#### 🚨 Pemberitahuan Sistem")
         st.markdown("Sistem memberikan indikasi awal berdasarkan hasil klasifikasi model dan bukan merupakan penentu kebenaran suatu berita.")
         
-        st.markdown("""
-        <div style="
-            border:1px solid #fde047;
-            border-radius:15px;
-            padding:15px;
-            margin-top:10px;
-            margin-down: 10px;
-            background:#fef9c3;
-            color: #1e293b !important
-        ">
-        Aplikasi ini menggunakan <b>TF-IDF</b> untuk merepresentasikan teks berita dalam bentuk numerik dan 
-        <b>algoritma Naïve Bayes</b> untuk melakukan klasifikasi serta menghasilkan tingkat kepercayaan prediksi.
-        </div>
-        """, unsafe_allow_html=True)
+        st.warning(
+            "Aplikasi ini menggunakan **TF-IDF** untuk merepresentasikan teks berita "
+            "dalam bentuk numerik dan **algoritma Naïve Bayes** untuk melakukan klasifikasi "
+            "serta menghasilkan tingkat kepercayaan prediksi."
+        )
 
         st.write("")
 
