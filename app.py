@@ -488,11 +488,11 @@ if submit_btn:
         
         st.markdown(f"""
         <div class="report-card {border_style}">
-            <span style="background-color: {card_color}22; color: {card_color}; border: 1px solid {card_color}55; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
+            <span style="background-color: {card_color}; color: #ffffff !important; padding: 0.35rem 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; display: inline-block;">
                 {status_label}
             </span>
-            <h4 style="margin-top: 1rem; color: black; font-size: 1.25rem; font-weight: 700;">{title_summary}</h4>
-            <p style="color: black; font-size: 0.95rem; font-weight: 300; line-height: 1.6; margin-bottom: 0;">{text_summary}</p>
+            <h4 style="margin-top: 1rem; color: var(--text-color) !important; font-size: 1.25rem; font-weight: 700;">{title_summary}</h4>
+            <p style="color: var(--text-color) !important; opacity: 0.9; font-size: 0.95rem; font-weight: 400; line-height: 1.6; margin-bottom: 0;">{text_summary}</p>
         </div>
         """, unsafe_allow_html=True)
         
