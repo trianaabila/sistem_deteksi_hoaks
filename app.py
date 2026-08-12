@@ -341,12 +341,13 @@ with col_info:
         
         st.markdown("""
         <div style="
-            border:1px solid #d1d5db;
+            border:1px solid #fde047;
             border-radius:15px;
             padding:15px;
             margin-top:10px;
             margin-down: 10px;
-            background: #FAFAD2;
+            background:#fef9c3;
+            color: #1e293b !important
         ">
         Aplikasi ini menggunakan <b>TF-IDF</b> untuk merepresentasikan teks berita dalam bentuk numerik dan 
         <b>algoritma Naïve Bayes</b> untuk melakukan klasifikasi serta menghasilkan tingkat kepercayaan prediksi.
