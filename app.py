@@ -24,14 +24,15 @@ st.set_page_config(
 # --- 2. CUSTOM CSS UNTUK TAMPILAN PREMIUM ---
 st.markdown("""
 <style>
+    /* Gunakan background transparan/bawaan tema Streamlit */
     .stApp {
-    background-color: white;
+        background-color: var(--background-color);
     }
     
     /* Tombol Analisis */
     div.stButton > button,
     div[data-testid="stFormSubmitButton"] > button {
-        background-color: red;
+        background-color: #ef4444;
         color: #ffffff !important;
         border: none;
         border-radius: 10px;
@@ -39,119 +40,75 @@ st.markdown("""
         transition: all 0.3s ease;
     }
 
-    /* Saat diarahkan kursor */
     div.stButton > button:hover,
     div[data-testid="stFormSubmitButton"] > button:hover {
-        background-color: #B22222;
-        color: white;
+        background-color: #b91c1c;
+        color: white !important;
         font-weight: 800 !important;
         transform: translateY(-2px);
-
-    }
-
-    /* Saat ditekan */
-    div.stButton > button:active,
-    div[data-testid="stFormSubmitButton"] > button:active {
-        background-color: #B22222;
-        transform: scale(0.98);
-    }
-
-    div.stButton > button {
-        background-color: #989898;
-        color: black;
-        border: none;
     }
 
     /* Panel kustom untuk header utama */
     .hero-container {
-        background: linear-gradient(
-            90deg,
-            #ffffff 0%,
-            #fff7ed 35%,
-            #eef6ff 70%,
-            #ffffff 100%
-        );
-
+        background: rgba(255, 255, 255, 0.05); /* Transparan dinamis */
         padding: 2.5rem 2rem;
-
-        border-radius: 0;      /* hilangkan sudut membulat */
-
-        border-left: none;
-        border-right: none;
-        border-bottom: 0.5px solid #60a5fa;
-
+        border-bottom: 1px solid rgba(96, 165, 250, 0.3);
         margin-bottom: 2rem;
         text-align: center;
+        border-radius: 12px;
     }
     
     .hero-title {
         font-size: 2.5rem;
         font-weight: 800;
-
-        background: linear-gradient(
-            90deg,
-            #ef4444,
-            #f97316,
-            #facc15
-    );
-
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-        
+        background: linear-gradient(90deg, #ef4444, #f97316, #facc15);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     
     .hero-subtitle {
-        color: black;
+        color: var(--text-color) !important; /* Otomatis Putih/Hitam */
         font-size: 1rem;
         font-weight: 400;
         max-width: 800px;
         margin: 0 auto;
+        opacity: 0.9;
     }
     
     /* Indikator Peringatan Dini */
     .warning-badge {
-        background-color: white;
-        color: black;
-        border: 0.1px solid grey;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-color) !important;
+        border: 1px solid rgba(128, 128, 128, 0.4);
         padding: 0.25rem 0.75rem;
         border-radius: 0.5rem;
         font-size: 0.9rem;
         font-weight: 500;
-        letter-spacing: 0.05em;
         display: inline-block;
         margin-bottom: 1rem;
     }
     
     /* Box Kustom untuk Laporan Hasil */
     .report-card {
-        background-color: white;
+        background-color: var(--secondary-background-color) !important;
         border-radius: 1rem;
         border-left: 8px solid #10b981;
         padding: 1.5rem;
         margin-top: 1.5rem;
-        border-top: 1px solid #334155;
-        border-right: 1px solid #334155;
-        border-bottom: 1px solid #334155;
-        color: black;
+        border-top: 1px solid rgba(128, 128, 128, 0.2);
+        border-right: 1px solid rgba(128, 128, 128, 0.2);
+        border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+        color: var(--text-color) !important;
     }
     
-    .report-card-danger {
-        border-left-color: #ef4444;
-    }
+    .report-card-danger { border-left-color: #ef4444; }
+    .report-card-warning { border-left-color: #f59e0b; }
     
-    .report-card-warning {
-        border-left-color: #f59e0b;
-    }
-    
-    div[data-testid="stVerticalBlockBorderWrapper"]{
-    background-color: #ffffff !important;
-
-}
     /* Tag Istilah Sensasional */
     .flagged-tag {
-        background-color: rgba(239, 68, 68, 0.1);
+        background-color: rgba(239, 68, 68, 0.15);
         color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.25);
+        border: 1px solid rgba(239, 68, 68, 0.3);
         padding: 0.2rem 0.6rem;
         border-radius: 0.375rem;
         font-size: 0.8rem;
@@ -159,38 +116,30 @@ st.markdown("""
         display: inline-block;
         margin: 0.2rem;
     }
-    .guide-panel{
-        background: #F8FAFC;
-        border:1px solid #d1d5db;
-        border-radius:15px;
-        color: black;
-        padding:25px;
-        margin-bottom:20px;
-}
+
+    .guide-panel {
+        background: var(--secondary-background-color) !important;
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        border-radius: 15px;
+        color: var(--text-color) !important;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
 
     .guide-step {
         display: flex;
         align-items: center;
         gap: 0.75rem;
         padding: 0.65rem 0;
-        font-size: 1.25rem;
-}
+        font-size: 1.1rem;
+        color: var(--text-color) !important;
+    }
 
-        .step-number{
-            width:38px;
-            height:38px;
-            border-radius:12px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight:700;
-}
-
-        div[data-testid="stWidgetLabel"] p {
-            font-size: 1.2rem !important;
-            font-weight: 600 !important;
-}
-
+    div[data-testid="stWidgetLabel"] p {
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        color: var(--text-color) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
