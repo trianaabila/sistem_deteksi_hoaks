@@ -24,33 +24,18 @@ st.set_page_config(
 # --- 2. CUSTOM CSS UNTUK TAMPILAN PREMIUM ---
 st.markdown("""
 <style>
-    /* Gunakan background transparan/bawaan tema Streamlit */
     .stApp {
         background-color: var(--background-color);
     }
     
-    /* Tombol Analisis */
-    div.stButton > button,
-    div[data-testid="stFormSubmitButton"] > button {
-        background-color: #ef4444;
-        color: #ffffff !important;
-        border: none;
+    div.stButton > button {
         border-radius: 10px;
         font-weight: 800 !important;
         transition: all 0.3s ease;
     }
 
-    div.stButton > button:hover,
-    div[data-testid="stFormSubmitButton"] > button:hover {
-        background-color: #b91c1c;
-        color: white !important;
-        font-weight: 800 !important;
-        transform: translateY(-2px);
-    }
-
-    /* Panel kustom untuk header utama */
     .hero-container {
-        background: rgba(255, 255, 255, 0.05); /* Transparan dinamis */
+        background: rgba(255, 255, 255, 0.05);
         padding: 2.5rem 2rem;
         border-bottom: 1px solid rgba(96, 165, 250, 0.3);
         margin-bottom: 2rem;
@@ -67,7 +52,7 @@ st.markdown("""
     }
     
     .hero-subtitle {
-        color: var(--text-color) !important; /* Otomatis Putih/Hitam */
+        color: var(--text-color) !important;
         font-size: 1rem;
         font-weight: 400;
         max-width: 800px;
@@ -75,7 +60,6 @@ st.markdown("""
         opacity: 0.9;
     }
     
-    /* Indikator Peringatan Dini */
     .warning-badge {
         background-color: rgba(255, 255, 255, 0.1);
         color: var(--text-color) !important;
@@ -88,7 +72,6 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    /* Box Kustom untuk Laporan Hasil */
     .report-card {
         background-color: var(--secondary-background-color) !important;
         border-radius: 1rem;
@@ -104,7 +87,6 @@ st.markdown("""
     .report-card-danger { border-left-color: #ef4444; }
     .report-card-warning { border-left-color: #f59e0b; }
     
-    /* Tag Istilah Sensasional */
     .flagged-tag {
         background-color: rgba(239, 68, 68, 0.15);
         color: #f87171;
@@ -146,9 +128,6 @@ st.markdown("""
 # --- 3. MEMUAT RESOURCES (CACHED) ---
 @st.cache_resource
 def load_saved_objects():
-    """
-    Memuat model klasifikasi Naive Bayes dan Vectorizer TF-IDF secara aman.
-    """
     model_loaded = False
     loaded_model, loaded_tfidf = None, None
 
@@ -171,7 +150,6 @@ def load_saved_objects():
 
 model, tfidf, is_model_ready = load_saved_objects()
 
-# Inisialisasi library Sastrawi secara cached agar aplikasi tidak lambat saat reload
 @st.cache_resource
 def init_sastrawi():
     if SASTRAWI_AVAILABLE:
@@ -184,35 +162,23 @@ stemmer, stopword = init_sastrawi()
 
 # --- 4. FUNGSI PRAPROSES TEKS ---
 def hitung_praproses(text):
-    """
-    Proses pembersihan teks (Cleansing, Case Folding, Stopwords, Stemming)
-    sesuai dengan konfigurasi pelatihan model di Google Colab.
-    """
-    # Case Folding
     text = text.lower()
+    text = re.sub(r"http\S+|www\S+", "", text)
+    text = re.sub(r"\d+", "", text)
+    text = re.sub(r"[^a-zA-Z\s]", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
     
-    # Cleansing (Mengikuti pola regex di dokumen pdf)
-    text = re.sub(r"http\S+|www\S+", "", text)      # Menghapus URL
-    text = re.sub(r"\d+", "", text)                 # Menghapus angka
-    text = re.sub(r"[^a-zA-Z\s]", "", text)         # Menghapus tanda baca
-    text = re.sub(r"\s+", " ", text).strip()        # Menghapus spasi berlebih
-    
-    # Tokenization & Gabung Kembali
     tokens = text.split()
     text = " ".join(tokens)
     
-    # Stop Word Removal & Stemming (Gunakan Sastrawi jika terpasang)
     if SASTRAWI_AVAILABLE and stopword and stemmer:
         text = stopword.remove(text)
         text = stemmer.stem(text)
     
     return text
 
-# --- 5. EKSTRAKSI ANOMALI KEBAHASAAN (HEURISTIK UTK METRIK) ---
+# --- 5. EKSTRAKSI ANOMALI KEBAHASAAN ---
 def ekstrak_fitur_tambahan_heuristik(title, content):
-    """
-    Mengekstrak ciri-ciri psikologis dan anomali teks untuk laporan visual tambahan.
-    """
     signals = []
     detected_words = []
     full_text = f"{title} {content}".lower()
@@ -233,12 +199,10 @@ def ekstrak_fitur_tambahan_heuristik(title, content):
             detected_words.append(term)
             signals.append({"type": "danger", "msg": msg})
             
-    # Tanda seru
     exclamation_count = full_text.count('!')
     if exclamation_count > 2:
         signals.append({"type": "warning", "msg": f"Terdeteksi {exclamation_count} tanda seru berlebih (kesan mendesak/provokatif)."})
         
-    # Kata Kapital Penuh
     tokens = re.findall(r'\b[A-Za-z]+\b', f"{title} {content}")
     extreme_caps = [word for word in tokens if len(word) >= 4 and word.isupper()]
     if len(extreme_caps) > 2:
@@ -248,7 +212,7 @@ def ekstrak_fitur_tambahan_heuristik(title, content):
             
     return signals, list(set(detected_words))
 
-# --- 6. INISIALISASI LOG RIWAYAT DI SESSION STATE ---
+# --- 6. INISIALISASI LOG RIWAYAT & RESET COUNTER ---
 if "logs" not in st.session_state:
     st.session_state.logs = [
         {
@@ -260,6 +224,9 @@ if "logs" not in st.session_state:
         }
     ]
 
+# Counter unik agar widget input dipaksa bersih saat reset
+if "reset_count" not in st.session_state:
+    st.session_state.reset_count = 0
 
 # --- 7. SIDEBAR LOG RIWAYAT ---
 with st.sidebar:
@@ -301,94 +268,75 @@ if not is_model_ready:
 if not SASTRAWI_AVAILABLE:
     st.info("ℹ️ **Info Modul:** Pustaka `Sastrawi` belum terpasang di environment Anda. Proses stemming dan stopword removal akan dilewati sementara waktu.")
 
-col_input, col_info =  st.columns([8,4])
+col_input, col_info = st.columns([8, 4])
 
 with col_input:
     with st.container(border=True):
-
         st.markdown("### 📖 Panduan Penggunaan")
-
         st.caption("Ikuti langkah berikut untuk melakukan analisis berita.")
-
         st.markdown("""
         <div class="guide-panel">
-
-        <div class="guide-step">
-        1. Masukkan judul berita jika tersedia.
-        </div>
-
-        <div class="guide-step">
-        2. Tempel isi atau narasi berita pada kolom yang tersedia.
-        </div>
-
-        <div class="guide-step">
-        3. Klik tombol <b>🔍 Analisis Berita.</b>
-        </div>
-
-        <div class="guide-step">
-        4. Periksa hasil prediksi dan tingkat kepercayaan sistem.
-        </div>
-
+            <div class="guide-step">1. Masukkan judul berita jika tersedia.</div>
+            <div class="guide-step">2. Tempel isi atau narasi berita pada kolom yang tersedia.</div>
+            <div class="guide-step">3. Klik tombol <b>🔍 Analisis Berita.</b></div>
+            <div class="guide-step">4. Periksa hasil prediksi dan tingkat kepercayaan sistem.</div>
         </div>
         """, unsafe_allow_html=True)
-  
 
 with col_info:
     with st.container(border=True):
-
         st.markdown("#### 🚨 Pemberitahuan Sistem")
         st.markdown("Sistem memberikan indikasi awal berdasarkan hasil klasifikasi model dan bukan merupakan penentu kebenaran suatu berita.")
-        
         st.warning(
             "Aplikasi ini menggunakan **TF-IDF** untuk merepresentasikan teks berita "
             "dalam bentuk numerik dan **algoritma Naïve Bayes** untuk melakukan klasifikasi "
             "serta menghasilkan tingkat kepercayaan prediksi."
         )
 
-        st.write("")
-
-
 st.markdown("### 📰 Pemeriksaan Indikasi Hoaks")
 
-with st.form("scanner_form"):
-    title_input = st.text_input(
-        "Judul Berita (Opsional):",
-        key="judul",
-        max_chars=150,
-        placeholder="Masukkan judul berita di sini jika ada..."
+# Ambil ID versi saat ini
+curr_id = st.session_state.reset_count
+
+title_input = st.text_input(
+    "Judul Berita (Opsional):",
+    key=f"judul_{curr_id}",
+    max_chars=150,
+    placeholder="Masukkan judul berita di sini jika ada..."
+)
+
+content_input = st.text_area(
+    "Isi Teks Berita / Narasi Informasi lengkap (Wajib):",
+    key=f"isi_{curr_id}",
+    height=250,
+    placeholder="Tempel atau ketik seluruh isi teks informasi di sini..."
+)
+
+col_btn1, col_btn2 = st.columns([4, 1])
+
+with col_btn1:
+    submit_btn = st.button(
+        "🔍 Analisis Berita",
+        type="primary",
+        use_container_width=True
     )
 
-    content_input = st.text_area(
-        "Isi Teks Berita / Narasi Informasi lengkap (Wajib):",
-        key="isi",
-        height=250,
-        placeholder="Tempel atau ketik seluruh isi teks informasi di sini..."
+with col_btn2:
+    reset_btn = st.button(
+        "🧹 Reset",
+        use_container_width=True
     )
 
-    col_btn1, col_btn2 = st.columns([4, 1])
-
-    with col_btn1:
-        submit_btn = st.form_submit_button(
-            "🔍 Analisis Berita",
-            use_container_width=True
-        )
-
-    with col_btn2:
-        reset_btn = st.form_submit_button(
-            "🧹 Reset",
-            use_container_width=True
-        )
-
+# Saat Reset diklik: naikkan counter lalu reload
 if reset_btn:
-    st.session_state.clear()
+    st.session_state.reset_count += 1
     st.rerun()
-    
+
 # --- 9. LOGIKA PEMROSESAN & PREDIKSI ---
 if submit_btn:
     if not content_input.strip() or len(content_input.strip()) < 15:
         st.error("⚠️ Teks masukan terlalu pendek! Masukkan minimal 15 karakter untuk memulai analisis.")
     else:
-        # Tampilan visual loading pemindaian bertahap
         progress_bar = st.progress(0)
         status_text = st.empty()
         
@@ -406,36 +354,25 @@ if submit_btn:
         status_text.empty()
         progress_bar.empty()
         
-        # Gabungkan judul dan isi teks untuk diumpankan ke model
         combined_text = f"{title_input} {content_input}"
         
         if is_model_ready:
-            # 1. Praproses teks menggunakan kaidah stopword & stemming
             cleaned_text = hitung_praproses(combined_text)
-            
-            # 2. Transformasi menggunakan TF-IDF fit
             vectorized_text = tfidf.transform([cleaned_text])
-            
-            # 3. Klasifikasi utama
             hasil_prediksi = model.predict(vectorized_text)[0]
             probabilitas = model.predict_proba(vectorized_text)[0]
             
-            # Mendapatkan index kelas Non-Hoaks (biasanya kelas '0' atau sesuai kelas latih Anda)
             try:
                 idx_non_hoaks = np.where(model.classes_ == '0')[0][0]
             except IndexError:
                 try:
                     idx_non_hoaks = np.where(model.classes_ == 0)[0][0]
                 except IndexError:
-                    idx_non_hoaks = 0  # Fallback awal jika hanya ada satu kelas terdaftar
+                    idx_non_hoaks = 0
             
-            # Derajat Kepercayaan dihitung dari seberapa besar probabilitas model menilai teks adalah Non-Hoaks (Kredibel)
             trust_score = float(probabilitas[idx_non_hoaks] * 100)
-            
-            # Mengonversi hasil prediksi ke bentuk biner tulisan
             is_hoax = str(hasil_prediksi) == '1'
         else:
-            # Simulasi deteksi cerdas Heuristik jika model.pkl belum ada di direktori
             detected_signals, flagged_terms = ekstrak_fitur_tambahan_heuristik(title_input, content_input)
             caps_ratio = len([w for w in combined_text.split() if w.isupper()])
             exclamation_ratio = combined_text.count("!")
@@ -444,33 +381,28 @@ if submit_btn:
             trust_score = max(5.0, min(100.0 - penalty, 98.5))
             is_hoax = trust_score < 50.0
 
-        # Penyesuaian batas skor
         trust_score = round(max(2.0, min(trust_score, 99.8)), 2)
         
-        # Menentukan status visual berdasarkan Ambang Batas Skor Kepercayaan (Trust Score)
         if trust_score >= 75:
             status_label = "TERINDIKASI NON-HOAKS (VALID)"
-            color_class = "emerald"
             border_style = ""
             card_color = "#10b981"
             title_summary = "Sinyal Kebahasaan Normal (Aman)"
             text_summary = "Model Machine Learning menyimpulkan bahwa gaya bahasa, intonasi tulisan, dan kepadatan informasi pada teks ini sangat konsisten dengan karakteristik artikel berita kredibel/resmi."
         elif 45 <= trust_score < 75:
             status_label = "PERLU KONFIRMASI (WASPADA)"
-            color_class = "yellow"
             border_style = "report-card-warning"
             card_color = "#f59e0b"
             title_summary = "Terdeteksi Sinyal Kecurigaan Ringan"
             text_summary = "Teks memiliki struktur kalimat yang netral namun memuat beberapa kata provokatif atau gaya tanda baca yang tidak standar. Lakukan cek silang secara berkala."
         else:
             status_label = "TERINDIKASI HOAKS (BAHAYA)"
-            color_class = "rose"
             border_style = "report-card-danger"
             card_color = "#ef4444"
             title_summary = "Terdeteksi Kuat Pola Manipulasi Teks!"
             text_summary = "Dilarang membagikan kembali pesan ini! Algoritma mendeteksi tanda-tanda manipulasi berita yang signifikan seperti desakan sebar masif, gaya teriak kapital, serta provokasi kepanikan."
 
-        # Simpan hasil pemeriksaan baru ke riwayat lokal (Session State)
+        # Simpan log riwayat
         st.session_state.logs.insert(0, {
             "timestamp": datetime.now().strftime("%H:%M:%S"),
             "title": title_input if title_input.strip() else "Pemeriksaan Teks Mandiri",
@@ -479,7 +411,6 @@ if submit_btn:
             "status": status_label
         })
         
-        # Ekstrak sinyal bahasa untuk divisualisasikan
         detected_signals, flagged_terms = ekstrak_fitur_tambahan_heuristik(title_input, content_input)
 
         # --- TAMPILAN DASHBOARD LAPORAN ---
@@ -512,16 +443,13 @@ if submit_btn:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("**Nilai Parameter Probabilitas Kelas:**")
             
-            # Bar Parameter 1: Validitas Teks
             st.markdown(f"Probabilitas Teks Asli (Valid): **{trust_score:.2f}%**")
             st.progress(trust_score / 100)
             
-            # Bar Parameter 2: Manipulasi Teks
             hoax_prob = round(100.0 - trust_score, 2)
             st.markdown(f"Probabilitas Teks Manipulatif (Hoaks): **{hoax_prob:.2f}%**")
             st.progress(hoax_prob / 100)
             
-        # Tampilan temuan sinyal bahasa dan tag istilah sensasional
         col_signals, col_words = st.columns([7, 5])
         
         with col_signals:
@@ -543,4 +471,3 @@ if submit_btn:
                 st.caption("Istilah pemicu respon emosional pembaca yang diidentifikasi di dalam teks:")
                 tags_html = "".join([f'<span class="flagged-tag">{word}</span>' for word in flagged_terms])
                 st.markdown(tags_html, unsafe_allow_html=True)
-                
